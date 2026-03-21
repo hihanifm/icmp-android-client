@@ -1,0 +1,27 @@
+# Gradle
+.gradle/
+build/
+**/build/
+
+# Local configuration
+local.properties
+
+# Android Studio / IntelliJ
+.idea/
+*.iml
+.cxx/
+.externalNativeBuild/
+
+# Keystores (never commit)
+*.jks
+*.keystore
+
+# Claude Code (local permissions / paths)
+.claude/settings.local.json
+
+# OS
+.DS_Store
+
+# Captures / logs
+captures/
+*.log
