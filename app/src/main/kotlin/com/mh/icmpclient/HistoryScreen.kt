@@ -26,6 +26,8 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -45,11 +47,14 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 
+private const val PAGE_SIZE = 10
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HistoryScreen(viewModel: PingViewModel = viewModel()) {
     val sessions by viewModel.getAllSessions().collectAsStateWithLifecycle(initialValue = emptyList())
     var selectedSession by remember { mutableStateOf<PingSessionEntity?>(null) }
+    var visibleCount by remember { mutableIntStateOf(PAGE_SIZE) }
 
     Column(modifier = Modifier.fillMaxSize()) {
         if (selectedSession != null) {
@@ -83,8 +88,9 @@ fun HistoryScreen(viewModel: PingViewModel = viewModel()) {
                     style = MaterialTheme.typography.bodyLarge,
                 )
             } else {
+                val displayedSessions = sessions.take(visibleCount)
                 LazyColumn(modifier = Modifier.padding(horizontal = 16.dp)) {
-                    items(sessions, key = { it.id }) { session ->
+                    items(displayedSessions, key = { it.id }) { session ->
                         SessionCard(
                             session = session,
                             onClick = { selectedSession = session },
@@ -92,6 +98,20 @@ fun HistoryScreen(viewModel: PingViewModel = viewModel()) {
                             viewModel = viewModel,
                         )
                         Spacer(Modifier.height(8.dp))
+                    }
+                    if (visibleCount < sessions.size) {
+                        item {
+                            LaunchedEffect(Unit) {
+                                visibleCount += PAGE_SIZE
+                            }
+                            Text(
+                                "Loading...",
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(16.dp),
+                                style = MaterialTheme.typography.bodySmall,
+                            )
+                        }
                     }
                 }
             }
@@ -130,11 +150,25 @@ private fun SessionCard(
                 dateFormat.format(Date(session.startTime)),
                 style = MaterialTheme.typography.bodySmall,
             )
+            val duration = session.endTime?.let { end ->
+                val secs = (end - session.startTime) / 1000
+                if (secs >= 60) "${secs / 60}m ${secs % 60}s" else "${secs}s"
+            }
+            Text(
+                buildString {
+                    append("${session.pingCount} pings")
+                    if (duration != null) append(" · $duration")
+                    if (session.pingCount > 0) {
+                        val loss = ((session.pingCount - session.successCount) * 100) / session.pingCount
+                        append(" · ${loss}% loss")
+                    }
+                },
+                style = MaterialTheme.typography.bodySmall,
+            )
             if (session.avgRtt != null) {
                 Text(
-                    "min/avg/max = %.1f/%.1f/%.1f ms — %d/%d packets".format(
+                    "min/avg/max = %.1f/%.1f/%.1f ms".format(
                         session.minRtt, session.avgRtt, session.maxRtt,
-                        session.successCount, session.pingCount,
                     ),
                     style = MaterialTheme.typography.bodySmall,
                     fontFamily = FontFamily.Monospace,

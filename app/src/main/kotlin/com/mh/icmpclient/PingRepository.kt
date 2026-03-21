@@ -102,7 +102,9 @@ class PingRepository(private val dao: PingDao) {
             } catch (e: Exception) {
                 _state.value = _state.value.copy(error = e.message, isRunning = false)
             } finally {
-                finalizeSession(sessionId)
+                kotlinx.coroutines.withContext(kotlinx.coroutines.NonCancellable) {
+                    finalizeSession(sessionId)
+                }
                 _state.value = _state.value.copy(isRunning = false)
             }
         }

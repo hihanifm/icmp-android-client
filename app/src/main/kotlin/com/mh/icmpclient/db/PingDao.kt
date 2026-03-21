@@ -28,7 +28,7 @@ interface PingDao {
     @Query("SELECT * FROM ping_sessions ORDER BY startTime DESC")
     fun getAllSessions(): Flow<List<PingSessionEntity>>
 
-    @Query("SELECT * FROM ping_results WHERE sessionId = :sessionId ORDER BY sequenceNumber ASC")
+    @Query("SELECT * FROM ping_results WHERE sessionId = :sessionId ORDER BY sequenceNumber ASC LIMIT 100")
     fun getResultsForSession(sessionId: Long): Flow<List<PingResultEntity>>
 
     @Query("DELETE FROM ping_sessions WHERE id = :sessionId")
