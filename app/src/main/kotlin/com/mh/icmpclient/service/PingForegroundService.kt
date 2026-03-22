@@ -53,7 +53,7 @@ class PingForegroundService : Service() {
             ACTION_START -> {
                 val host = intent.getStringExtra(EXTRA_HOST) ?: "8.8.8.8"
                 val count = intent.getIntExtra(EXTRA_COUNT, 1000)
-                val interval = intent.getLongExtra(EXTRA_INTERVAL, 1000L)
+                val interval = intent.getLongExtra(EXTRA_INTERVAL, 100L)
                 val timeout = intent.getLongExtra(EXTRA_TIMEOUT, 1000L)
                 val networkHandle = intent.getLongExtra(EXTRA_NETWORK_HANDLE, -1L)
                 val network: Network? = if (networkHandle != -1L && Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {

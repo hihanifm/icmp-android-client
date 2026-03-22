@@ -24,7 +24,7 @@ class PingViewModel(application: Application) : AndroidViewModel(application) {
         const val PREFS_NAME = "icmp_prefs"
         const val PREF_PING_INTERVAL_MS = "ping_interval_ms"
         const val PREF_PING_TIMEOUT_MS = "ping_timeout_ms"
-        private const val DEFAULT_INTERVAL_MS = 1000L
+        private const val DEFAULT_INTERVAL_MS = 100L
         private const val DEFAULT_TIMEOUT_MS = 1000L
         const val MAX_PING_INTERVAL_MS = 300_000L
         const val MAX_PING_TIMEOUT_MS = 120_000L
