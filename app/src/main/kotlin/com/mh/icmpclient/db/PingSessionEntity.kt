@@ -14,4 +14,8 @@ data class PingSessionEntity(
     val minRtt: Double? = null,
     val avgRtt: Double? = null,
     val maxRtt: Double? = null,
+    val networkLabel: String? = null,
+    val pingBackend: String? = null,
+    val intervalMillis: Long? = null,
+    val timeoutMillis: Long? = null,
 )

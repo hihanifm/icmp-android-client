@@ -13,6 +13,7 @@ import android.os.Build
 import android.os.IBinder
 import com.mh.icmpclient.IcmpApp
 import com.mh.icmpclient.R
+import com.mh.icmpclient.resolveAutoNetworkSessionLabel
 import com.mh.icmpclient.ping.PingBackend
 import com.mh.icmpclient.repository.PingRepository
 import com.mh.icmpclient.ui.MainActivity
@@ -33,6 +34,7 @@ class PingForegroundService : Service() {
         const val EXTRA_INTERVAL = "interval"
         const val EXTRA_TIMEOUT = "timeout"
         const val EXTRA_NETWORK_HANDLE = "network_handle"
+        const val EXTRA_NETWORK_LABEL = "network_label"
         const val EXTRA_PING_BACKEND = "ping_backend"
         private const val NOTIFICATION_ID = 1
         private const val PREFS_NAME = "icmp_prefs"
@@ -52,7 +54,7 @@ class PingForegroundService : Service() {
         when (intent?.action) {
             ACTION_START -> {
                 val host = intent.getStringExtra(EXTRA_HOST) ?: "8.8.8.8"
-                val count = intent.getIntExtra(EXTRA_COUNT, 1000)
+                val count = intent.getIntExtra(EXTRA_COUNT, 100)
                 val interval = intent.getLongExtra(EXTRA_INTERVAL, 100L)
                 val timeout = intent.getLongExtra(EXTRA_TIMEOUT, 1000L)
                 val networkHandle = intent.getLongExtra(EXTRA_NETWORK_HANDLE, -1L)
@@ -68,6 +70,10 @@ class PingForegroundService : Service() {
                     val prefs = getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
                     PingBackend.fromPrefsValue(prefs.getString(PingBackend.PREFS_KEY, null))
                 }
+                var networkLabel = intent.getStringExtra(EXTRA_NETWORK_LABEL) ?: "Auto"
+                if (network == null && networkLabel == "Auto") {
+                    networkLabel = applicationContext.resolveAutoNetworkSessionLabel()
+                }
 
                 startForeground(NOTIFICATION_ID, buildNotification("Pinging $host..."))
 
@@ -78,6 +84,7 @@ class PingForegroundService : Service() {
                     timeoutMillis = timeout,
                     scope = serviceScope,
                     network = network,
+                    networkLabel = networkLabel,
                     backend = backend,
                 )
 

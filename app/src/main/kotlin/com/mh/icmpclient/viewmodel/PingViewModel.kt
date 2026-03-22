@@ -8,6 +8,7 @@ import android.os.Build
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.mh.icmpclient.IcmpApp
+import com.mh.icmpclient.resolveAutoNetworkSessionLabel
 import com.mh.icmpclient.ping.PingBackend
 import com.mh.icmpclient.service.PingForegroundService
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -46,7 +47,7 @@ class PingViewModel(application: Application) : AndroidViewModel(application) {
     private val _pingCount = MutableStateFlow(10)
     val pingCount: StateFlow<Int> = _pingCount.asStateFlow()
 
-    private val _maxPingCount = MutableStateFlow(1000)
+    private val _maxPingCount = MutableStateFlow(100)
     val maxPingCount: StateFlow<Int> = _maxPingCount.asStateFlow()
 
     private val _pingIntervalMillis = MutableStateFlow(
@@ -92,11 +93,14 @@ class PingViewModel(application: Application) : AndroidViewModel(application) {
         prefs.edit().putLong(PREF_PING_TIMEOUT_MS, clamped).apply()
     }
 
-    fun startPing(host: String, network: Network? = null) {
+    fun startPing(host: String, network: Network? = null, networkLabel: String = "Auto") {
         val count = if (_continuous.value) _maxPingCount.value else _pingCount.value
         val backend = _pingBackend.value
         val intervalMs = _pingIntervalMillis.value
         val timeoutMs = _pingTimeoutMillis.value
+        val resolvedNetworkLabel =
+            if (network == null) getApplication<Application>().resolveAutoNetworkSessionLabel()
+            else networkLabel
 
         if (_backgroundMode.value) {
             val intent = Intent(getApplication(), PingForegroundService::class.java).apply {
@@ -106,6 +110,7 @@ class PingViewModel(application: Application) : AndroidViewModel(application) {
                 putExtra(PingForegroundService.EXTRA_INTERVAL, intervalMs)
                 putExtra(PingForegroundService.EXTRA_TIMEOUT, timeoutMs)
                 putExtra(PingForegroundService.EXTRA_PING_BACKEND, backend.name)
+                putExtra(PingForegroundService.EXTRA_NETWORK_LABEL, resolvedNetworkLabel)
                 if (network != null) {
                     putExtra(PingForegroundService.EXTRA_NETWORK_HANDLE, network.networkHandle)
                 }
@@ -123,6 +128,7 @@ class PingViewModel(application: Application) : AndroidViewModel(application) {
                 timeoutMillis = timeoutMs,
                 scope = viewModelScope,
                 network = network,
+                networkLabel = resolvedNetworkLabel,
                 backend = backend,
             )
         }

@@ -42,6 +42,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.mh.icmpclient.db.PingResultEntity
 import com.mh.icmpclient.db.PingSessionEntity
+import com.mh.icmpclient.ping.PingBackend
 import com.mh.icmpclient.viewmodel.PingViewModel
 import kotlinx.coroutines.launch
 import java.io.File
@@ -50,6 +51,14 @@ import java.util.Date
 import java.util.Locale
 
 private const val PAGE_SIZE = 10
+
+private fun formatPingBackendLabel(stored: String?): String {
+    if (stored == null) return "—"
+    return when (PingBackend.fromPrefsValue(stored)) {
+        PingBackend.ICMP4A -> "icmp4a"
+        PingBackend.SHELL -> "Shell"
+    }
+}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -179,6 +188,29 @@ private fun SessionCard(
                     fontFamily = FontFamily.Monospace,
                 )
             }
+            val metaLine = buildString {
+                session.networkLabel?.let { append("Net: $it") }
+                val engine = formatPingBackendLabel(session.pingBackend)
+                if (engine != "—") {
+                    if (isNotEmpty()) append(" · ")
+                    append("Engine: $engine")
+                }
+                session.intervalMillis?.let {
+                    if (isNotEmpty()) append(" · ")
+                    append("Interval: ${it}ms")
+                }
+                session.timeoutMillis?.let {
+                    if (isNotEmpty()) append(" · ")
+                    append("Timeout: ${it}ms")
+                }
+            }
+            if (metaLine.isNotEmpty()) {
+                Text(
+                    metaLine,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
         }
     }
 }
@@ -208,6 +240,26 @@ private fun SessionDetailScreen(
                 }
             },
         )
+
+        val hasSessionMeta = session.networkLabel != null || session.pingBackend != null ||
+            session.intervalMillis != null || session.timeoutMillis != null
+        if (hasSessionMeta) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 8.dp),
+            ) {
+                val net = session.networkLabel ?: "—"
+                val engine = formatPingBackendLabel(session.pingBackend)
+                val interval = session.intervalMillis?.let { "${it} ms" } ?: "—"
+                val timeout = session.timeoutMillis?.let { "${it} ms" } ?: "—"
+                Text(
+                    "Network: $net · Engine: $engine · Interval: $interval · Timeout: $timeout",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+        }
 
         if (results.isNotEmpty()) {
             LatencyChart(
@@ -267,11 +319,16 @@ private fun exportCsv(
     val exportDir = File(context.cacheDir, "exports").apply { mkdirs() }
     val file = File(exportDir, "ping_${session.host}_${session.id}.csv")
 
+    val net = session.networkLabel ?: ""
+    val backend = session.pingBackend ?: ""
+    val interval = session.intervalMillis?.toString() ?: ""
+    val timeout = session.timeoutMillis?.toString() ?: ""
+
     file.bufferedWriter().use { writer ->
-        writer.appendLine("seq,timestamp,rtt_ms,success,error")
+        writer.appendLine("seq,timestamp,rtt_ms,success,error,network,backend,interval_ms,timeout_ms")
         results.forEach { r ->
             writer.appendLine(
-                "${r.sequenceNumber},${r.timestamp},${r.rttMs ?: ""},${r.isSuccess},${r.errorMessage ?: ""}"
+                "${r.sequenceNumber},${r.timestamp},${r.rttMs ?: ""},${r.isSuccess},${r.errorMessage ?: ""},$net,$backend,$interval,$timeout"
             )
         }
     }
@@ -299,12 +356,18 @@ private suspend fun exportAllSessionsCsv(context: Context, viewModel: PingViewMo
     val file = File(exportDir, "ping_all_sessions.csv")
 
     file.bufferedWriter().use { writer ->
-        writer.appendLine("session_id,host,start_time,seq,timestamp,rtt_ms,success,error")
+        writer.appendLine(
+            "session_id,host,start_time,seq,timestamp,rtt_ms,success,error,network,backend,interval_ms,timeout_ms",
+        )
         sessionsWithResults.forEach { (session, results) ->
             val startFormatted = dateFormat.format(Date(session.startTime))
+            val net = session.networkLabel ?: ""
+            val backend = session.pingBackend ?: ""
+            val interval = session.intervalMillis?.toString() ?: ""
+            val timeout = session.timeoutMillis?.toString() ?: ""
             results.forEach { r ->
                 writer.appendLine(
-                    "${session.id},${session.host},$startFormatted,${r.sequenceNumber},${r.timestamp},${r.rttMs ?: ""},${r.isSuccess},${r.errorMessage ?: ""}"
+                    "${session.id},${session.host},$startFormatted,${r.sequenceNumber},${r.timestamp},${r.rttMs ?: ""},${r.isSuccess},${r.errorMessage ?: ""},$net,$backend,$interval,$timeout"
                 )
             }
         }

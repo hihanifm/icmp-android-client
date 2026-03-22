@@ -245,7 +245,7 @@ fun PingScreen(modifier: Modifier = Modifier, viewModel: PingViewModel = viewMod
             Button(
                 onClick = {
                     prefs.edit().putString("last_host", host).apply()
-                    viewModel.startPing(host, selectedNetwork.network)
+                    viewModel.startPing(host, selectedNetwork.network, selectedNetwork.label)
                 },
                 enabled = !state.isRunning && host.isNotBlank(),
                 modifier = Modifier.weight(1f),

@@ -42,6 +42,7 @@ class PingRepository(private val dao: PingDao) {
         timeoutMillis: Long,
         scope: CoroutineScope,
         network: android.net.Network? = null,
+        networkLabel: String = "Auto",
         backend: PingBackend = PingBackend.ICMP4A,
     ) {
         stopPing()
@@ -55,7 +56,14 @@ class PingRepository(private val dao: PingDao) {
 
         pingJob = scope.launch {
             val sessionId = dao.insertSession(
-                PingSessionEntity(host = host, startTime = System.currentTimeMillis())
+                PingSessionEntity(
+                    host = host,
+                    startTime = System.currentTimeMillis(),
+                    networkLabel = networkLabel,
+                    pingBackend = backend.name,
+                    intervalMillis = intervalMillis,
+                    timeoutMillis = timeoutMillis,
+                )
             )
             currentSessionId = sessionId
 
