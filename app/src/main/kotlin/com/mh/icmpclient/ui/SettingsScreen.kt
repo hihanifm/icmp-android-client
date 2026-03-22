@@ -7,9 +7,14 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
@@ -23,6 +28,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.mikepenz.aboutlibraries.ui.compose.m3.LibrariesContainer
 import com.mh.icmpclient.viewmodel.PingViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -37,14 +43,33 @@ fun SettingsScreen(
     var intervalText by remember(intervalMs) { mutableStateOf(intervalMs.toString()) }
     var timeoutText by remember(timeoutMs) { mutableStateOf(timeoutMs.toString()) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
+    var showOpenSourceLicenses by remember { mutableStateOf(false) }
 
     Column(modifier = modifier.fillMaxSize()) {
-        TopAppBar(title = { Text("Settings") })
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-        ) {
+        if (showOpenSourceLicenses) {
+            TopAppBar(
+                title = { Text("Open source licenses") },
+                navigationIcon = {
+                    IconButton(onClick = { showOpenSourceLicenses = false }) {
+                        Icon(
+                            Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = "Back",
+                        )
+                    }
+                },
+            )
+            LibrariesContainer(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .weight(1f),
+            )
+        } else {
+            TopAppBar(title = { Text("Settings") })
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp),
+            ) {
             Text(
                 text = "Ping timing",
                 style = MaterialTheme.typography.titleMedium,
@@ -111,6 +136,14 @@ fun SettingsScreen(
                 modifier = Modifier.fillMaxWidth(),
             ) {
                 Text("Save")
+            }
+            Spacer(modifier = Modifier.height(24.dp))
+            OutlinedButton(
+                onClick = { showOpenSourceLicenses = true },
+                modifier = Modifier.fillMaxWidth(),
+            ) {
+                Text("Open source licenses")
+            }
             }
         }
     }
