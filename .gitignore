@@ -3,6 +3,9 @@
 build/
 **/build/
 
+# Android Studio signed bundle/APK output (do not commit)
+app/release/
+
 # Local configuration (SDK path, machine-specific)
 local.properties
 
