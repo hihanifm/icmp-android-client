@@ -3,8 +3,6 @@ package com.mh.icmpclient
 import com.mh.icmpclient.db.PingDao
 import com.mh.icmpclient.db.PingResultEntity
 import com.mh.icmpclient.db.PingSessionEntity
-import com.marsounjan.icmp4a.Icmp
-import com.marsounjan.icmp4a.Icmp4a
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -42,7 +40,8 @@ data class PingState(
 
 class PingRepository(private val dao: PingDao) {
 
-    private val icmp = Icmp4a()
+    private val icmp4aExecutor = Icmp4aPingExecutor()
+    private val shellExecutor = ShellPingExecutor()
 
     private val _state = MutableStateFlow(PingState())
     val state: StateFlow<PingState> = _state.asStateFlow()
@@ -60,10 +59,16 @@ class PingRepository(private val dao: PingDao) {
         intervalMillis: Long,
         scope: CoroutineScope,
         network: android.net.Network? = null,
+        backend: PingBackend = PingBackend.ICMP4A,
     ) {
         stopPing()
         rttValues.clear()
         _state.value = PingState(isRunning = true, host = host)
+
+        val executor: PingExecutor = when (backend) {
+            PingBackend.ICMP4A -> icmp4aExecutor
+            PingBackend.SHELL -> shellExecutor
+        }
 
         pingJob = scope.launch {
             val sessionId = dao.insertSession(
@@ -72,33 +77,38 @@ class PingRepository(private val dao: PingDao) {
             currentSessionId = sessionId
 
             try {
-                icmp.pingInterval(host = host, count = count, intervalMillis = intervalMillis, network = network)
-                    .collect { pingStatus ->
-                        val item = mapStatusToResult(pingStatus)
-                        dao.insertResult(
-                            PingResultEntity(
-                                sessionId = sessionId,
-                                sequenceNumber = item.sequenceNumber,
-                                rttMs = item.rttMs,
-                                isSuccess = item.isSuccess,
-                                errorMessage = item.errorMessage,
-                                timestamp = item.timestamp,
-                            )
+                executor.execute(
+                    host = host,
+                    count = count,
+                    intervalMillis = intervalMillis,
+                    network = network,
+                ).collect { chunk ->
+                    val item = chunk.item
+                    dao.insertResult(
+                        PingResultEntity(
+                            sessionId = sessionId,
+                            sequenceNumber = item.sequenceNumber,
+                            rttMs = item.rttMs,
+                            isSuccess = item.isSuccess,
+                            errorMessage = item.errorMessage,
+                            timestamp = item.timestamp,
                         )
-                        if (item.isSuccess && item.rttMs != null) {
-                            rttValues.add(item.rttMs)
-                        }
-                        val currentState = _state.value
-                        val newResults = currentState.results + item
-                        val stats = computeStats(newResults)
-                        _state.value = currentState.copy(
-                            resolvedIp = pingStatus.ip.hostAddress,
-                            results = newResults,
-                            stats = stats,
-                            error = null,
-                        )
-                        _pingResults.emit(item)
+                    )
+                    if (item.isSuccess && item.rttMs != null) {
+                        rttValues.add(item.rttMs)
                     }
+                    val currentState = _state.value
+                    val newResults = currentState.results + item
+                    val stats = computeStats(newResults)
+                    val newIp = chunk.resolvedIp ?: currentState.resolvedIp
+                    _state.value = currentState.copy(
+                        resolvedIp = newIp,
+                        results = newResults,
+                        stats = stats,
+                        error = null,
+                    )
+                    _pingResults.emit(item)
+                }
             } catch (e: Exception) {
                 _state.value = _state.value.copy(error = e.message, isRunning = false)
             } finally {
@@ -111,11 +121,10 @@ class PingRepository(private val dao: PingDao) {
     }
 
     fun stopPing() {
+        shellExecutor.cancelExecution()
+        icmp4aExecutor.cancelExecution()
         pingJob?.cancel()
         pingJob = null
-        currentSessionId?.let { id ->
-            // Finalization happens in the coroutine's finally block
-        }
     }
 
     private suspend fun finalizeSession(sessionId: Long) {
@@ -130,26 +139,6 @@ class PingRepository(private val dao: PingDao) {
             maxRtt = stats.maxRtt,
         )
         currentSessionId = null
-    }
-
-    private fun mapStatusToResult(status: Icmp.PingStatus): PingResultItem {
-        val now = System.currentTimeMillis()
-        return when (val result = status.result) {
-            is Icmp.PingResult.Success -> PingResultItem(
-                sequenceNumber = result.sequenceNumber,
-                rttMs = result.ms.toDouble(),
-                isSuccess = true,
-                errorMessage = null,
-                timestamp = now,
-            )
-            is Icmp.PingResult.Failed -> PingResultItem(
-                sequenceNumber = status.packetsTransmitted,
-                rttMs = null,
-                isSuccess = false,
-                errorMessage = result.message,
-                timestamp = now,
-            )
-        }
     }
 
     private fun computeStats(results: List<PingResultItem>): PingStats {

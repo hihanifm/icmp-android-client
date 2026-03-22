@@ -1,6 +1,7 @@
 package com.mh.icmpclient
 
 import android.app.Application
+import android.content.Context
 import android.content.Intent
 import android.net.Network
 import android.os.Build
@@ -13,6 +14,13 @@ import kotlinx.coroutines.flow.asStateFlow
 class PingViewModel(application: Application) : AndroidViewModel(application) {
 
     private val repository = (application as IcmpApp).pingRepository
+
+    private val prefs = application.getSharedPreferences("icmp_prefs", Context.MODE_PRIVATE)
+
+    private val _pingBackend = MutableStateFlow(
+        PingBackend.fromPrefsValue(prefs.getString(PingBackend.PREFS_KEY, null)),
+    )
+    val pingBackend: StateFlow<PingBackend> = _pingBackend.asStateFlow()
 
     val pingState = repository.state
 
@@ -27,6 +35,11 @@ class PingViewModel(application: Application) : AndroidViewModel(application) {
 
     private val _maxPingCount = MutableStateFlow(1000)
     val maxPingCount: StateFlow<Int> = _maxPingCount.asStateFlow()
+
+    fun setPingBackend(backend: PingBackend) {
+        _pingBackend.value = backend
+        prefs.edit().putString(PingBackend.PREFS_KEY, backend.name).apply()
+    }
 
     fun setBackgroundMode(enabled: Boolean) {
         _backgroundMode.value = enabled
@@ -46,6 +59,7 @@ class PingViewModel(application: Application) : AndroidViewModel(application) {
 
     fun startPing(host: String, network: Network? = null) {
         val count = if (_continuous.value) _maxPingCount.value else _pingCount.value
+        val backend = _pingBackend.value
 
         if (_backgroundMode.value) {
             val intent = Intent(getApplication(), PingForegroundService::class.java).apply {
@@ -53,6 +67,7 @@ class PingViewModel(application: Application) : AndroidViewModel(application) {
                 putExtra(PingForegroundService.EXTRA_HOST, host)
                 putExtra(PingForegroundService.EXTRA_COUNT, count)
                 putExtra(PingForegroundService.EXTRA_INTERVAL, 1000L)
+                putExtra(PingForegroundService.EXTRA_PING_BACKEND, backend.name)
                 if (network != null) {
                     putExtra(PingForegroundService.EXTRA_NETWORK_HANDLE, network.networkHandle)
                 }
@@ -69,6 +84,7 @@ class PingViewModel(application: Application) : AndroidViewModel(application) {
                 intervalMillis = 1000L,
                 scope = viewModelScope,
                 network = network,
+                backend = backend,
             )
         }
     }

@@ -5,6 +5,7 @@ import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
 import android.app.Service
+import android.content.Context
 import android.content.Intent
 import android.net.ConnectivityManager
 import android.net.Network
@@ -26,7 +27,9 @@ class PingForegroundService : Service() {
         const val EXTRA_COUNT = "count"
         const val EXTRA_INTERVAL = "interval"
         const val EXTRA_NETWORK_HANDLE = "network_handle"
+        const val EXTRA_PING_BACKEND = "ping_backend"
         private const val NOTIFICATION_ID = 1
+        private const val PREFS_NAME = "icmp_prefs"
         private const val CHANNEL_ID = "ping_service"
     }
 
@@ -51,6 +54,14 @@ class PingForegroundService : Service() {
                     cm.allNetworks.firstOrNull { it.networkHandle == networkHandle }
                 } else null
 
+                val backendExtra = intent.getStringExtra(EXTRA_PING_BACKEND)
+                val backend = if (backendExtra != null) {
+                    PingBackend.fromPrefsValue(backendExtra)
+                } else {
+                    val prefs = getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+                    PingBackend.fromPrefsValue(prefs.getString(PingBackend.PREFS_KEY, null))
+                }
+
                 startForeground(NOTIFICATION_ID, buildNotification("Pinging $host..."))
 
                 repository.startPing(
@@ -59,6 +70,7 @@ class PingForegroundService : Service() {
                     intervalMillis = interval,
                     scope = serviceScope,
                     network = network,
+                    backend = backend,
                 )
 
                 serviceScope.launch {

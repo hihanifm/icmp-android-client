@@ -46,6 +46,8 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 
 private data class NetworkOption(val network: Network?, val label: String)
 
+private data class BackendOption(val backend: PingBackend, val label: String)
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PingScreen(modifier: Modifier = Modifier, viewModel: PingViewModel = viewModel()) {
@@ -54,6 +56,7 @@ fun PingScreen(modifier: Modifier = Modifier, viewModel: PingViewModel = viewMod
     val continuous by viewModel.continuous.collectAsStateWithLifecycle()
     val pingCount by viewModel.pingCount.collectAsStateWithLifecycle()
     val maxPingCount by viewModel.maxPingCount.collectAsStateWithLifecycle()
+    val pingBackend by viewModel.pingBackend.collectAsStateWithLifecycle()
 
     val context = LocalContext.current
     val prefs = context.getSharedPreferences("icmp_prefs", android.content.Context.MODE_PRIVATE)
@@ -81,6 +84,15 @@ fun PingScreen(modifier: Modifier = Modifier, viewModel: PingViewModel = viewMod
     }
     var selectedNetwork by remember { mutableStateOf(networkOptions.first()) }
     var networkDropdownExpanded by remember { mutableStateOf(false) }
+
+    val backendOptions = remember {
+        listOf(
+            BackendOption(PingBackend.ICMP4A, "In-app (ICMP)"),
+            BackendOption(PingBackend.SHELL, "System ping"),
+        )
+    }
+    var selectedBackend by remember(pingBackend) { mutableStateOf(backendOptions.first { it.backend == pingBackend }) }
+    var backendDropdownExpanded by remember { mutableStateOf(false) }
 
     LaunchedEffect(state.results.size) {
         if (state.results.isNotEmpty()) {
@@ -131,6 +143,47 @@ fun PingScreen(modifier: Modifier = Modifier, viewModel: PingViewModel = viewMod
                     )
                 }
             }
+        }
+
+        Spacer(Modifier.height(8.dp))
+
+        ExposedDropdownMenuBox(
+            expanded = backendDropdownExpanded,
+            onExpandedChange = { if (!state.isRunning) backendDropdownExpanded = it },
+        ) {
+            OutlinedTextField(
+                value = selectedBackend.label,
+                onValueChange = {},
+                readOnly = true,
+                label = { Text("Ping engine") },
+                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = backendDropdownExpanded) },
+                modifier = Modifier.menuAnchor().fillMaxWidth(),
+                enabled = !state.isRunning,
+            )
+            ExposedDropdownMenu(
+                expanded = backendDropdownExpanded,
+                onDismissRequest = { backendDropdownExpanded = false },
+            ) {
+                backendOptions.forEach { option ->
+                    DropdownMenuItem(
+                        text = { Text(option.label) },
+                        onClick = {
+                            selectedBackend = option
+                            viewModel.setPingBackend(option.backend)
+                            backendDropdownExpanded = false
+                        },
+                    )
+                }
+            }
+        }
+
+        if (selectedBackend.backend == PingBackend.SHELL && selectedNetwork.network != null) {
+            Text(
+                "System ping uses default routing; the selected network may be ignored.",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.padding(top = 4.dp),
+            )
         }
 
         Spacer(Modifier.height(8.dp))
