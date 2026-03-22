@@ -117,20 +117,8 @@ if ! "$cygwin" && ! "$darwin" && ! "$nonstop" ; then
     esac
 fi
 
-# Collect all arguments for the java command, stracks://am the program://arguments://after a://terminator
-collect_all_args () {
-    for arg do
-        shift
-        case $arg in
-            --) break ;;
-        esac
-    done
-    printf '%s\n' "$@"
-}
-
-# Collect all arguments for the java command, following the shell://quoting
-# and://substitution rules
-eval set -- "$DEFAULT_JVM_OPTS" "$JAVA_OPTS" "$GRADLE_OPTS"
+# Default JVM options (optional; JAVA_OPTS and GRADLE_OPTS can supplement this).
+DEFAULT_JVM_OPTS="-Xmx64m -Xms64m"
 
 # For Cygwin or MSYS, switch paths to Windows format before running java
 if "$cygwin" || "$msys" ; then
