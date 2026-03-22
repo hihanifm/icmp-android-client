@@ -18,7 +18,17 @@ class PingViewModel(application: Application) : AndroidViewModel(application) {
 
     private val repository = (application as IcmpApp).pingRepository
 
-    private val prefs = application.getSharedPreferences("icmp_prefs", Context.MODE_PRIVATE)
+    private val prefs = application.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+
+    companion object {
+        const val PREFS_NAME = "icmp_prefs"
+        const val PREF_PING_INTERVAL_MS = "ping_interval_ms"
+        const val PREF_PING_TIMEOUT_MS = "ping_timeout_ms"
+        private const val DEFAULT_INTERVAL_MS = 1000L
+        private const val DEFAULT_TIMEOUT_MS = 1000L
+        const val MAX_PING_INTERVAL_MS = 300_000L
+        const val MAX_PING_TIMEOUT_MS = 120_000L
+    }
 
     private val _pingBackend = MutableStateFlow(
         PingBackend.fromPrefsValue(prefs.getString(PingBackend.PREFS_KEY, null)),
@@ -38,6 +48,16 @@ class PingViewModel(application: Application) : AndroidViewModel(application) {
 
     private val _maxPingCount = MutableStateFlow(1000)
     val maxPingCount: StateFlow<Int> = _maxPingCount.asStateFlow()
+
+    private val _pingIntervalMillis = MutableStateFlow(
+        prefs.getLong(PREF_PING_INTERVAL_MS, DEFAULT_INTERVAL_MS).coerceIn(0L, MAX_PING_INTERVAL_MS),
+    )
+    val pingIntervalMillis: StateFlow<Long> = _pingIntervalMillis.asStateFlow()
+
+    private val _pingTimeoutMillis = MutableStateFlow(
+        prefs.getLong(PREF_PING_TIMEOUT_MS, DEFAULT_TIMEOUT_MS).coerceIn(1L, MAX_PING_TIMEOUT_MS),
+    )
+    val pingTimeoutMillis: StateFlow<Long> = _pingTimeoutMillis.asStateFlow()
 
     fun setPingBackend(backend: PingBackend) {
         _pingBackend.value = backend
@@ -60,16 +80,31 @@ class PingViewModel(application: Application) : AndroidViewModel(application) {
         _maxPingCount.value = count
     }
 
+    fun setPingIntervalMillis(value: Long) {
+        val clamped = value.coerceIn(0L, MAX_PING_INTERVAL_MS)
+        _pingIntervalMillis.value = clamped
+        prefs.edit().putLong(PREF_PING_INTERVAL_MS, clamped).apply()
+    }
+
+    fun setPingTimeoutMillis(value: Long) {
+        val clamped = value.coerceIn(1L, MAX_PING_TIMEOUT_MS)
+        _pingTimeoutMillis.value = clamped
+        prefs.edit().putLong(PREF_PING_TIMEOUT_MS, clamped).apply()
+    }
+
     fun startPing(host: String, network: Network? = null) {
         val count = if (_continuous.value) _maxPingCount.value else _pingCount.value
         val backend = _pingBackend.value
+        val intervalMs = _pingIntervalMillis.value
+        val timeoutMs = _pingTimeoutMillis.value
 
         if (_backgroundMode.value) {
             val intent = Intent(getApplication(), PingForegroundService::class.java).apply {
                 action = PingForegroundService.ACTION_START
                 putExtra(PingForegroundService.EXTRA_HOST, host)
                 putExtra(PingForegroundService.EXTRA_COUNT, count)
-                putExtra(PingForegroundService.EXTRA_INTERVAL, 1000L)
+                putExtra(PingForegroundService.EXTRA_INTERVAL, intervalMs)
+                putExtra(PingForegroundService.EXTRA_TIMEOUT, timeoutMs)
                 putExtra(PingForegroundService.EXTRA_PING_BACKEND, backend.name)
                 if (network != null) {
                     putExtra(PingForegroundService.EXTRA_NETWORK_HANDLE, network.networkHandle)
@@ -84,7 +119,8 @@ class PingViewModel(application: Application) : AndroidViewModel(application) {
             repository.startPing(
                 host = host,
                 count = count,
-                intervalMillis = 1000L,
+                intervalMillis = intervalMs,
+                timeoutMillis = timeoutMs,
                 scope = viewModelScope,
                 network = network,
                 backend = backend,

@@ -15,9 +15,16 @@ class Icmp4aPingExecutor : PingExecutor {
         host: String,
         count: Int,
         intervalMillis: Long,
+        timeoutMillis: Long,
         network: Network?,
     ): Flow<PingChunk> =
-        icmp.pingInterval(host = host, count = count, intervalMillis = intervalMillis, network = network)
+        icmp.pingInterval(
+            host = host,
+            count = count,
+            timeoutMillis = timeoutMillis,
+            intervalMillis = intervalMillis,
+            network = network,
+        )
             .map { status ->
                 PingChunk(
                     item = mapStatusToResult(status),

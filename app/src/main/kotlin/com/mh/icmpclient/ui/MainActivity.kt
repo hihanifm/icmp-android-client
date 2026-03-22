@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.NetworkPing
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
@@ -61,12 +62,19 @@ class MainActivity : ComponentActivity() {
                                 icon = { Icon(Icons.Default.History, contentDescription = null) },
                                 label = { Text("History") },
                             )
+                            NavigationBarItem(
+                                selected = selectedTab == 2,
+                                onClick = { selectedTab = 2 },
+                                icon = { Icon(Icons.Default.Settings, contentDescription = null) },
+                                label = { Text("Settings") },
+                            )
                         }
                     }
                 ) { innerPadding ->
                     when (selectedTab) {
                         0 -> PingScreen(modifier = Modifier.padding(innerPadding))
                         1 -> HistoryScreen()
+                        2 -> SettingsScreen(modifier = Modifier.padding(innerPadding))
                     }
                 }
             }

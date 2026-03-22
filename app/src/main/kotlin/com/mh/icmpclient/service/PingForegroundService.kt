@@ -31,6 +31,7 @@ class PingForegroundService : Service() {
         const val EXTRA_HOST = "host"
         const val EXTRA_COUNT = "count"
         const val EXTRA_INTERVAL = "interval"
+        const val EXTRA_TIMEOUT = "timeout"
         const val EXTRA_NETWORK_HANDLE = "network_handle"
         const val EXTRA_PING_BACKEND = "ping_backend"
         private const val NOTIFICATION_ID = 1
@@ -53,6 +54,7 @@ class PingForegroundService : Service() {
                 val host = intent.getStringExtra(EXTRA_HOST) ?: "8.8.8.8"
                 val count = intent.getIntExtra(EXTRA_COUNT, 1000)
                 val interval = intent.getLongExtra(EXTRA_INTERVAL, 1000L)
+                val timeout = intent.getLongExtra(EXTRA_TIMEOUT, 1000L)
                 val networkHandle = intent.getLongExtra(EXTRA_NETWORK_HANDLE, -1L)
                 val network: Network? = if (networkHandle != -1L && Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
                     val cm = getSystemService(ConnectivityManager::class.java)
@@ -73,6 +75,7 @@ class PingForegroundService : Service() {
                     host = host,
                     count = count,
                     intervalMillis = interval,
+                    timeoutMillis = timeout,
                     scope = serviceScope,
                     network = network,
                     backend = backend,

@@ -10,6 +10,8 @@ import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.Dispatchers
 import com.mh.icmpclient.model.PingResultItem
 import java.util.concurrent.atomic.AtomicReference
+import kotlin.math.ceil
+import kotlin.math.max
 
 /**
  * Runs `/system/bin/ping` in short processes.
@@ -23,9 +25,11 @@ class ShellPingExecutor : PingExecutor {
         host: String,
         count: Int,
         intervalMillis: Long,
+        timeoutMillis: Long,
         network: Network?,
     ): Flow<PingChunk> =
         flow {
+            val waitSeconds = max(1, ceil(timeoutMillis / 1000.0).toInt()).toString()
             repeat(count) { iteration ->
                 coroutineContext.ensureActive()
                 var resolvedIp: String? = null
@@ -39,7 +43,7 @@ class ShellPingExecutor : PingExecutor {
                             "-c",
                             "1",
                             "-W",
-                            "5",
+                            waitSeconds,
                             host,
                         )
                             .redirectErrorStream(true)

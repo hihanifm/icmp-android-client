@@ -39,6 +39,7 @@ class PingRepository(private val dao: PingDao) {
         host: String,
         count: Int,
         intervalMillis: Long,
+        timeoutMillis: Long,
         scope: CoroutineScope,
         network: android.net.Network? = null,
         backend: PingBackend = PingBackend.ICMP4A,
@@ -63,6 +64,7 @@ class PingRepository(private val dao: PingDao) {
                     host = host,
                     count = count,
                     intervalMillis = intervalMillis,
+                    timeoutMillis = timeoutMillis,
                     network = network,
                 ).collect { chunk ->
                     val item = chunk.item

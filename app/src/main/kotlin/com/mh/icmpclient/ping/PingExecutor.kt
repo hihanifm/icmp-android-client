@@ -28,6 +28,7 @@ interface PingExecutor {
         host: String,
         count: Int,
         intervalMillis: Long,
+        timeoutMillis: Long,
         network: Network?,
     ): Flow<PingChunk>
 
