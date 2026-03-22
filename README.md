@@ -2,6 +2,17 @@
 
 A simple Android app for running ICMP ping tests with real-time statistics and history tracking.
 
+## Demo
+
+Screen recording of the app is hosted on GitHub’s asset CDN (not committed here) so the repository stays small and clones stay fast.
+
+1. Open a **new issue** on this repository (a draft is fine — you do not need to submit it).
+2. Drag your `.mp4` into the comment box and wait for the upload to finish.
+3. Copy the `https://user-images.githubusercontent.com/...` URL GitHub inserts.
+4. Replace the placeholder line below with that URL alone on one line (no backticks) — GitHub will show an inline player on the README.
+
+https://github.com/user-attachments/assets/e3c3de42-d0cc-44f5-a7b5-352f953cec41
+
 ## Features
 
 - Ping any host with configurable count and interval
