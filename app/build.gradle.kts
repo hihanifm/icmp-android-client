@@ -1,9 +1,23 @@
+import java.io.FileInputStream
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.ksp)
     alias(libs.plugins.aboutlibraries)
 }
+
+// Play / release signing: copy keystore.properties.example to keystore.properties (gitignored)
+// at the repo root, set storeFile (path relative to repo root or absolute), passwords, and key alias.
+val keystorePropertiesFile = rootProject.file("keystore.properties")
+val keystoreProperties = Properties()
+if (keystorePropertiesFile.exists()) {
+    keystoreProperties.load(FileInputStream(keystorePropertiesFile))
+}
+val hasReleaseKeystore = keystorePropertiesFile.exists() &&
+    listOf("storeFile", "storePassword", "keyAlias", "keyPassword")
+        .all { keystoreProperties.getProperty(it).orEmpty().isNotBlank() }
 
 android {
     namespace = "com.mh.icmpclient"
@@ -15,6 +29,26 @@ android {
         targetSdk = 34
         versionCode = 2
         versionName = "1.1"
+    }
+
+    signingConfigs {
+        create("release") {
+            if (hasReleaseKeystore) {
+                storeFile = rootProject.file(keystoreProperties.getProperty("storeFile")!!)
+                storePassword = keystoreProperties.getProperty("storePassword")
+                keyAlias = keystoreProperties.getProperty("keyAlias")
+                keyPassword = keystoreProperties.getProperty("keyPassword")
+            }
+        }
+    }
+
+    buildTypes {
+        release {
+            isMinifyEnabled = false
+            if (hasReleaseKeystore) {
+                signingConfig = signingConfigs.getByName("release")
+            }
+        }
     }
 
     buildFeatures {

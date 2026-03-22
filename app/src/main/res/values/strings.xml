@@ -3,4 +3,6 @@
     <string name="app_name">ICMP Ping</string>
     <string name="notification_channel_name">Ping Service</string>
     <string name="notification_channel_description">Shows ping status while running in background</string>
+    <!-- Shown to the system for specialUse foreground services (Android 14+); keep in sync with Play Console declarations. -->
+    <string name="fgs_special_use_subtype" translatable="false">Runs ICMP ping with a persistent notification so latency monitoring can continue while you use other apps.</string>
 </resources>

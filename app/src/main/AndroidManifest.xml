@@ -29,7 +29,11 @@
         <service
             android:name=".service.PingForegroundService"
             android:foregroundServiceType="specialUse"
-            android:exported="false" />
+            android:exported="false">
+            <property
+                android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
+                android:value="@string/fgs_special_use_subtype" />
+        </service>
 
         <meta-data
             android:name="android.optimized_for_constrained_network"

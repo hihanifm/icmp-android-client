@@ -3,8 +3,13 @@
 build/
 **/build/
 
-# Local configuration
+# Local configuration (SDK path, machine-specific)
 local.properties
+
+# Local Gradle overrides (passwords, signing flags — keep out of git)
+gradle.properties.local
+secrets.properties
+signing.properties
 
 # Android Studio / IntelliJ
 .idea/
@@ -12,9 +17,29 @@ local.properties
 .cxx/
 .externalNativeBuild/
 
-# Keystores (never commit)
+# Keystores and signing secrets (never commit)
 *.jks
 *.keystore
+*.p12
+keystore.properties
+
+# Environment files (API keys, tokens)
+.env
+.env.local
+.env.*.local
+
+# Google Play / Firebase / cloud credentials (CI or local upload)
+play-upload-credentials.json
+play-store-credentials.json
+google-play-api.json
+androidPublisherCredentials.json
+*-service-account*.json
+google-services.json
+GoogleService-Info.plist
+
+# Private keys / certs often used for signing or TLS (adjust if you commit public certs only)
+*.key
+*.pem
 
 # Claude Code (local permissions / paths)
 .claude/settings.local.json
@@ -25,3 +50,6 @@ local.properties
 # Captures / logs
 captures/
 *.log
+
+# Memory dumps (can contain app data)
+*.hprof
