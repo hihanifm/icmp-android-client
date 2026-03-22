@@ -1,4 +1,4 @@
-package com.mh.icmpclient
+package com.mh.icmpclient.viewmodel
 
 import android.app.Application
 import android.content.Context
@@ -7,6 +7,9 @@ import android.net.Network
 import android.os.Build
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import com.mh.icmpclient.IcmpApp
+import com.mh.icmpclient.ping.PingBackend
+import com.mh.icmpclient.service.PingForegroundService
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow

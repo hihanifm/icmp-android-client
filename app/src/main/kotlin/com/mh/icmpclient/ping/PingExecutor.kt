@@ -1,6 +1,7 @@
-package com.mh.icmpclient
+package com.mh.icmpclient.ping
 
 import android.net.Network
+import com.mh.icmpclient.model.PingResultItem
 import kotlinx.coroutines.flow.Flow
 
 enum class PingBackend {

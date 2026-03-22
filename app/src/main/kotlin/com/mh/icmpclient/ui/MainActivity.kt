@@ -1,4 +1,4 @@
-package com.mh.icmpclient
+package com.mh.icmpclient.ui
 
 import android.Manifest
 import android.content.pm.PackageManager

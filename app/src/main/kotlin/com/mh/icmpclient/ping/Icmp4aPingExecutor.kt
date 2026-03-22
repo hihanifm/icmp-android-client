@@ -1,8 +1,9 @@
-package com.mh.icmpclient
+package com.mh.icmpclient.ping
 
 import android.net.Network
 import com.marsounjan.icmp4a.Icmp
 import com.marsounjan.icmp4a.Icmp4a
+import com.mh.icmpclient.model.PingResultItem
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 

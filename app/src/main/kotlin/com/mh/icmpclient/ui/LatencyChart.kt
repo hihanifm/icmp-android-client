@@ -1,4 +1,4 @@
-package com.mh.icmpclient
+package com.mh.icmpclient.ui
 
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.fillMaxWidth

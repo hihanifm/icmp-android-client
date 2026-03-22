@@ -1,8 +1,15 @@
-package com.mh.icmpclient
+package com.mh.icmpclient.repository
 
 import com.mh.icmpclient.db.PingDao
 import com.mh.icmpclient.db.PingResultEntity
 import com.mh.icmpclient.db.PingSessionEntity
+import com.mh.icmpclient.model.PingResultItem
+import com.mh.icmpclient.model.PingState
+import com.mh.icmpclient.model.PingStats
+import com.mh.icmpclient.ping.Icmp4aPingExecutor
+import com.mh.icmpclient.ping.PingBackend
+import com.mh.icmpclient.ping.PingExecutor
+import com.mh.icmpclient.ping.ShellPingExecutor
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -12,31 +19,6 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
-
-data class PingResultItem(
-    val sequenceNumber: Int,
-    val rttMs: Double?,
-    val isSuccess: Boolean,
-    val errorMessage: String?,
-    val timestamp: Long,
-)
-
-data class PingStats(
-    val pingCount: Int = 0,
-    val successCount: Int = 0,
-    val minRtt: Double? = null,
-    val avgRtt: Double? = null,
-    val maxRtt: Double? = null,
-)
-
-data class PingState(
-    val isRunning: Boolean = false,
-    val host: String = "",
-    val resolvedIp: String? = null,
-    val results: List<PingResultItem> = emptyList(),
-    val stats: PingStats = PingStats(),
-    val error: String? = null,
-)
 
 class PingRepository(private val dao: PingDao) {
 

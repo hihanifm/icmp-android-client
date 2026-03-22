@@ -1,4 +1,4 @@
-package com.mh.icmpclient
+package com.mh.icmpclient.service
 
 import android.app.Notification
 import android.app.NotificationChannel
@@ -11,6 +11,11 @@ import android.net.ConnectivityManager
 import android.net.Network
 import android.os.Build
 import android.os.IBinder
+import com.mh.icmpclient.IcmpApp
+import com.mh.icmpclient.R
+import com.mh.icmpclient.ping.PingBackend
+import com.mh.icmpclient.repository.PingRepository
+import com.mh.icmpclient.ui.MainActivity
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob

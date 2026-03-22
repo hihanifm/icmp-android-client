@@ -1,4 +1,4 @@
-package com.mh.icmpclient
+package com.mh.icmpclient.ping
 
 import android.net.Network
 import kotlin.coroutines.coroutineContext
@@ -8,6 +8,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.Dispatchers
+import com.mh.icmpclient.model.PingResultItem
 import java.util.concurrent.atomic.AtomicReference
 
 /**

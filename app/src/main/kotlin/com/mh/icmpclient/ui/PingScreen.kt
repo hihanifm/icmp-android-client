@@ -1,4 +1,4 @@
-package com.mh.icmpclient
+package com.mh.icmpclient.ui
 
 import android.net.ConnectivityManager
 import android.net.Network
@@ -43,6 +43,8 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.mh.icmpclient.ping.PingBackend
+import com.mh.icmpclient.viewmodel.PingViewModel
 
 private data class NetworkOption(val network: Network?, val label: String)
 

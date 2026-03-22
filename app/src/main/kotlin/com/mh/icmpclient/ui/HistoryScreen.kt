@@ -1,4 +1,4 @@
-package com.mh.icmpclient
+package com.mh.icmpclient.ui
 
 import android.content.Context
 import android.content.Intent
@@ -41,6 +41,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.mh.icmpclient.db.PingResultEntity
 import com.mh.icmpclient.db.PingSessionEntity
+import com.mh.icmpclient.viewmodel.PingViewModel
 import kotlinx.coroutines.launch
 import java.io.File
 import java.text.SimpleDateFormat
