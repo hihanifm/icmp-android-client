@@ -32,6 +32,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.activity.compose.BackHandler
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontFamily
@@ -59,6 +60,9 @@ fun HistoryScreen(viewModel: PingViewModel = viewModel()) {
 
     Column(modifier = Modifier.fillMaxSize()) {
         if (selectedSession != null) {
+            BackHandler {
+                selectedSession = null
+            }
             SessionDetailScreen(
                 session = selectedSession!!,
                 viewModel = viewModel,
